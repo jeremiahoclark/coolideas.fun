@@ -21,6 +21,8 @@
         const { useState, useEffect, useCallback, useRef } = React;
 
         const CooperativeFlowPuzzle = () => {
+          const [deviceSelected, setDeviceSelected] = useState(false);
+          const [deviceType, setDeviceType] = useState('');
           const [gameStarted, setGameStarted] = useState(false);
           const [requiredKey, setRequiredKey] = useState('');
           const [isKeyPressed, setIsKeyPressed] = useState(false);
@@ -61,7 +63,7 @@
             height: 32,
             velX: 0,
             velY: 0,
-            speed: 5,
+            speed: 3,
             jumpPower: 15,
             onGround: false,
             direction: 1
@@ -77,6 +79,1298 @@
             const keys = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'S', 'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'];
             return keys[Math.floor(Math.random() * keys.length)];
           };
+
+          // Initialize platformer level data
+          const initializePlatformerLevel = (level) => {
+            const newPlatforms = [];
+            const newCoins = [];
+            const newEnemies = [];
+            let levelEndX = 2000;
+
+            if (level === 1) {
+              newPlatforms.push(
+                { x: 0, y: 550, width: 400, height: 50, color: '#8B4513' },
+                { x: 500, y: 550, width: 400, height: 50, color: '#8B4513' },
+                { x: 1000, y: 550, width: 400, height: 50, color: '#8B4513' },
+                { x: 1500, y: 550, width: 500, height: 50, color: '#8B4513' },
+                { x: 300, y: 450, width: 100, height: 20, color: '#CD853F' },
+                { x: 600, y: 400, width: 120, height: 20, color: '#CD853F' },
+                { x: 800, y: 350, width: 100, height: 20, color: '#CD853F' },
+                { x: 1100, y: 450, width: 100, height: 20, color: '#CD853F' },
+                { x: 1600, y: 400, width: 100, height: 20, color: '#CD853F' }
+              );
+              newCoins.push(
+                { x: 350, y: 410, collected: false },
+                { x: 650, y: 360, collected: false },
+                { x: 850, y: 310, collected: false },
+                { x: 1150, y: 410, collected: false },
+                { x: 1650, y: 360, collected: false }
+              );
+              newEnemies.push(
+                { x: 520, y: 510, width: 24, height: 24, velX: -2, direction: -1, alive: true },
+                { x: 1150, y: 410, width: 24, height: 24, velX: -2, direction: -1, alive: true }
+              );
+              levelEndX = 2000;
+            } else if (level === 2) {
+              newPlatforms.push(
+                { x: 0, y: 550, width: 300, height: 50, color: '#654321' },
+                { x: 400, y: 500, width: 200, height: 20, color: '#8B6914' },
+                { x: 700, y: 450, width: 150, height: 20, color: '#8B6914' },
+                { x: 950, y: 400, width: 150, height: 20, color: '#8B6914' },
+                { x: 1200, y: 350, width: 200, height: 20, color: '#8B6914' },
+                { x: 1500, y: 300, width: 150, height: 20, color: '#8B6914' },
+                { x: 1750, y: 250, width: 200, height: 20, color: '#8B6914' },
+                { x: 2050, y: 550, width: 400, height: 50, color: '#654321' }
+              );
+              newCoins.push(
+                { x: 450, y: 460, collected: false },
+                { x: 750, y: 410, collected: false },
+                { x: 1000, y: 360, collected: false },
+                { x: 1250, y: 310, collected: false },
+                { x: 1550, y: 260, collected: false },
+                { x: 1800, y: 210, collected: false }
+              );
+              newEnemies.push(
+                { x: 450, y: 460, width: 24, height: 24, velX: 3, direction: 1, alive: true },
+                { x: 1000, y: 360, width: 24, height: 24, velX: -3, direction: -1, alive: true },
+                { x: 1800, y: 210, width: 24, height: 24, velX: 2, direction: 1, alive: true }
+              );
+              levelEndX = 2450;
+            } else {
+              newPlatforms.push(
+                { x: 0, y: 550, width: 250, height: 50, color: '#2F4F4F' },
+                { x: 350, y: 480, width: 100, height: 20, color: '#696969' },
+                { x: 550, y: 420, width: 100, height: 20, color: '#696969' },
+                { x: 750, y: 360, width: 100, height: 20, color: '#696969' },
+                { x: 950, y: 300, width: 100, height: 20, color: '#696969' },
+                { x: 1150, y: 240, width: 100, height: 20, color: '#696969' },
+                { x: 1350, y: 180, width: 100, height: 20, color: '#696969' },
+                { x: 1550, y: 120, width: 100, height: 20, color: '#696969' },
+                { x: 1750, y: 180, width: 150, height: 20, color: '#696969' },
+                { x: 2000, y: 240, width: 150, height: 20, color: '#696969' },
+                { x: 2250, y: 550, width: 300, height: 50, color: '#2F4F4F' }
+              );
+              newCoins.push(
+                { x: 400, y: 440, collected: false },
+                { x: 600, y: 380, collected: false },
+                { x: 800, y: 320, collected: false },
+                { x: 1000, y: 260, collected: false },
+                { x: 1200, y: 200, collected: false },
+                { x: 1400, y: 140, collected: false },
+                { x: 1600, y: 80, collected: false },
+                { x: 1825, y: 140, collected: false }
+              );
+              newEnemies.push(
+                { x: 400, y: 440, width: 24, height: 24, velX: -4, direction: -1, alive: true },
+                { x: 800, y: 320, width: 24, height: 24, velX: 4, direction: 1, alive: true },
+                { x: 1200, y: 200, width: 24, height: 24, velX: -3, direction: -1, alive: true },
+                { x: 1825, y: 140, width: 24, height: 24, velX: 3, direction: 1, alive: true }
+              );
+              levelEndX = 2550;
+            }
+
+            setPlatforms(newPlatforms);
+            setCoins(newCoins);
+            setEnemies(newEnemies);
+
+            return levelEndX;
+          };
+
+          // Initialize platformer
+          const initializePlatformer = useCallback(async (level) => {
+            setIsLoading(true);
+
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const platformLevel = level - 6;
+            const levelEndX = initializePlatformerLevel(platformLevel);
+
+            setPlatformerPlayer({
+              x: 100,
+              y: 400,
+              width: 32,
+              height: 32,
+              velX: 0,
+              velY: 0,
+              speed: 3,
+              jumpPower: 15,
+              onGround: false,
+              direction: 1
+            });
+
+            setPlatformerGame(prev => ({
+              ...prev,
+              level: platformLevel,
+              camera: { x: 0, y: 0 },
+              gameOver: false,
+              won: false,
+              timeUp: false,
+              levelEndX: levelEndX
+            }));
+
+            setGameWon(false);
+            setIsLoading(false);
+          }, []);
+
+          // Initialize puzzle
+          const initializePuzzle = useCallback(async (level) => {
+            setIsLoading(true);
+            setUnsolvableError(false);
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            if (level <= 6) {
+              const layout = generateSolvableLayout(level);
+
+              setGrid(layout.grid);
+              setEndpoints(layout.endpoints);
+              setPaths(new Map());
+              setActivePath(null);
+              setGameWon(false);
+            }
+
+            setIsLoading(false);
+          }, []);
+
+          // Start new game
+          const startGame = () => {
+            setRequiredKey(generateRandomKey());
+            setGameStarted(true);
+            setCurrentLevel(1);
+            setGameMode('puzzle');
+            initializePuzzle(1);
+            setPowerTimer(0);
+          };
+
+          // Handle keyboard events and touch events
+          useEffect(() => {
+            if (!gameStarted) return;
+
+            const handleKeyDown = (event) => {
+              if (deviceType === 'desktop' && event.key.toUpperCase() === requiredKey) {
+                setIsKeyPressed(true);
+              }
+
+              if (gameMode === 'platformer') {
+                const key = event.key.toLowerCase();
+                setPlatformerKeys(prev => ({ ...prev, [key]: true }));
+              }
+            };
+
+            const handleKeyUp = (event) => {
+              if (deviceType === 'desktop' && event.key.toUpperCase() === requiredKey) {
+                setIsKeyPressed(false);
+              }
+
+              if (gameMode === 'platformer') {
+                const key = event.key.toLowerCase();
+                setPlatformerKeys(prev => ({ ...prev, [key]: false }));
+              }
+            };
+
+            const handleTouchStart = (event) => {
+              if (deviceType === 'mobile') {
+                event.preventDefault();
+                setIsKeyPressed(true);
+              }
+            };
+
+            const handleTouchEnd = (event) => {
+              if (deviceType === 'mobile') {
+                event.preventDefault();
+                setIsKeyPressed(false);
+              }
+            };
+
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
+
+            if (deviceType === 'mobile') {
+              window.addEventListener('touchstart', handleTouchStart, { passive: false });
+              window.addEventListener('touchend', handleTouchEnd, { passive: false });
+              window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+            }
+
+            return () => {
+              window.removeEventListener('keydown', handleKeyDown);
+              window.removeEventListener('keyup', handleKeyUp);
+              if (deviceType === 'mobile') {
+                window.removeEventListener('touchstart', handleTouchStart);
+                window.removeEventListener('touchend', handleTouchEnd);
+                window.removeEventListener('touchcancel', handleTouchEnd);
+              }
+            };
+          }, [gameStarted, requiredKey, gameMode, deviceType]);
+
+          // Power timer
+          useEffect(() => {
+            if (!isKeyPressed || !gameStarted || gameWon) return;
+
+            const timer = setInterval(() => {
+              setPowerTimer(prev => prev + 1);
+            }, 100);
+
+            return () => clearInterval(timer);
+          }, [isKeyPressed, gameStarted, gameWon]);
+
+          // Collision detection
+          const checkCollision = (rect1, rect2) => {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+          };
+
+          // Platformer game loop
+          useEffect(() => {
+            if (gameMode !== 'platformer' || !gameStarted || !canvasRef.current) return;
+
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+
+            const gameLoop = () => {
+              if (platformerGame.gameOver) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = 'white';
+                ctx.font = '48px Arial';
+                ctx.textAlign = 'center';
+
+                if (platformerGame.won) {
+                  ctx.fillStyle = '#FFD700';
+                  ctx.fillText('VICTORY!', canvas.width/2, canvas.height/2 - 100);
+                } else {
+                  ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2 - 50);
+                }
+
+                ctx.font = '24px Arial';
+                ctx.fillText('Press R to Restart at Puzzle Level 1', canvas.width/2, canvas.height/2 + 80);
+
+                if (platformerKeys['r']) {
+                  setCurrentLevel(1);
+                  setGameMode('puzzle');
+                  setRequiredKey(generateRandomKey());
+                  initializePuzzle(1);
+                }
+
+                animationFrameRef.current = requestAnimationFrame(gameLoop);
+                return;
+              }
+
+              if (isKeyPressed) {
+                setPlatformerPlayer(prev => {
+                  const newPlayer = { ...prev };
+
+                  if (platformerKeys['a'] || platformerKeys['arrowleft']) {
+                    newPlayer.velX = -newPlayer.speed;
+                    newPlayer.direction = -1;
+                  } else if (platformerKeys['d'] || platformerKeys['arrowright']) {
+                    newPlayer.velX = newPlayer.speed;
+                    newPlayer.direction = 1;
+                  } else {
+                    newPlayer.velX *= 0.8;
+                  }
+
+                  if ((platformerKeys['w'] || platformerKeys['arrowup'] || platformerKeys[' ']) && newPlayer.onGround) {
+                    newPlayer.velY = -newPlayer.jumpPower;
+                    newPlayer.onGround = false;
+                  }
+
+                  newPlayer.velY += 0.4;
+                  if (newPlayer.velY > 15) newPlayer.velY = 15;
+
+                  newPlayer.x += newPlayer.velX;
+                  newPlayer.y += newPlayer.velY;
+
+                  newPlayer.onGround = false;
+                  platforms.forEach(platform => {
+                    if (checkCollision(newPlayer, platform)) {
+                      if (newPlayer.velY > 0 && newPlayer.y < platform.y) {
+                        newPlayer.y = platform.y - newPlayer.height;
+                        newPlayer.velY = 0;
+                        newPlayer.onGround = true;
+                      } else if (newPlayer.velY < 0 && newPlayer.y > platform.y) {
+                        newPlayer.y = platform.y + platform.height;
+                        newPlayer.velY = 0;
+                      } else if (newPlayer.velX > 0 && newPlayer.x < platform.x) {
+                        newPlayer.x = platform.x - newPlayer.width;
+                      } else if (newPlayer.velX < 0 && newPlayer.x > platform.x) {
+                        newPlayer.x = platform.x + platform.width;
+                      }
+                    }
+                  });
+
+                  if (newPlayer.x < 0) newPlayer.x = 0;
+
+                  if (newPlayer.y > canvas.height) {
+                    setPlatformerGame(prev => {
+                      const newLives = prev.lives - 1;
+                      if (newLives <= 0) {
+                        setCurrentLevel(1);
+                        setGameMode('puzzle');
+                        setRequiredKey(generateRandomKey());
+                        initializePuzzle(1);
+                        return prev;
+                      } else {
+                        return { ...prev, lives: newLives };
+                      }
+                    });
+                    return {
+                      ...prev,
+                      x: 100,
+                      y: 400,
+                      velX: 0,
+                      velY: 0
+                    };
+                  }
+
+                  if (newPlayer.x >= platformerGame.levelEndX) {
+                    if (platformerGame.level < 3) {
+                      const nextPlatformerLevel = platformerGame.level + 1;
+                      const newEndX = initializePlatformerLevel(nextPlatformerLevel);
+                      setPlatformerGame(prevGame => ({
+                        ...prevGame,
+                        level: nextPlatformerLevel,
+                        levelEndX: newEndX
+                      }));
+                      newPlayer.x = 100;
+                      newPlayer.y = 400;
+                      newPlayer.velX = 0;
+                      newPlayer.velY = 0;
+                    } else {
+                      setPlatformerGame(prevGame => ({
+                        ...prevGame,
+                        gameOver: true,
+                        won: true
+                      }));
+                    }
+                  }
+
+                  return newPlayer;
+                });
+
+                setCoins(prevCoins => {
+                  return prevCoins.map(coin => {
+                    if (!coin.collected &&
+                        Math.abs(platformerPlayer.x - coin.x) < 30 &&
+                        Math.abs(platformerPlayer.y - coin.y) < 30) {
+                      setPlatformerGame(prev => ({ ...prev, score: prev.score + 100 }));
+
+                      if (platformerGame.score + 100 >= 500 && !platformerGame.timeLimitActive) {
+                        setPlatformerGame(prev => ({
+                          ...prev,
+                          timeLimitActive: true,
+                          timeLimit: 60 * 60
+                        }));
+                      }
+
+                      return { ...coin, collected: true };
+                    }
+                    return coin;
+                  });
+                });
+
+                setEnemies(prevEnemies => {
+                  return prevEnemies.map(enemy => {
+                    if (!enemy.alive) return enemy;
+
+                    const newEnemy = { ...enemy };
+                    newEnemy.x += newEnemy.velX;
+
+                    platforms.forEach(platform => {
+                      if (newEnemy.x >= platform.x - 20 && newEnemy.x <= platform.x + platform.width + 20 &&
+                          newEnemy.y >= platform.y - newEnemy.height && newEnemy.y <= platform.y + 10) {
+                        if (newEnemy.x <= platform.x || newEnemy.x >= platform.x + platform.width - newEnemy.width) {
+                          newEnemy.velX *= -1;
+                          newEnemy.direction *= -1;
+                        }
+                      }
+                    });
+
+                    if (checkCollision(platformerPlayer, newEnemy)) {
+                      if (platformerPlayer.velY > 0 && platformerPlayer.y < newEnemy.y - 10) {
+                        newEnemy.alive = false;
+                        setPlatformerPlayer(prev => ({ ...prev, velY: -8 }));
+                        setPlatformerGame(prev => ({ ...prev, score: prev.score + 200 }));
+                      } else {
+                        setPlatformerGame(prev => {
+                          const newLives = prev.lives - 1;
+                          if (newLives <= 0) {
+                            setCurrentLevel(1);
+                            setGameMode('puzzle');
+                            setRequiredKey(generateRandomKey());
+                            initializePuzzle(1);
+                            return prev;
+                          } else {
+                            setPlatformerPlayer(prevPlayer => ({
+                              ...prevPlayer,
+                              x: 100,
+                              y: 400,
+                              velX: 0,
+                              velY: 0
+                            }));
+                            return { ...prev, lives: newLives };
+                          }
+                        });
+                      }
+                    }
+
+                    return newEnemy;
+                  });
+                });
+
+                if (platformerGame.timeLimitActive) {
+                  setPlatformerGame(prev => {
+                    const newTimeLimit = prev.timeLimit - 1;
+                    let newCountdown = prev.countdownStarted;
+
+                    if (newTimeLimit <= 30 * 60 && !newCountdown) {
+                      newCountdown = true;
+                    }
+
+                    if (newTimeLimit <= 0) {
+                      const newLives = prev.lives - 1;
+                      if (newLives <= 0) {
+                        setCurrentLevel(1);
+                        setGameMode('puzzle');
+                        setRequiredKey(generateRandomKey());
+                        initializePuzzle(1);
+                        return prev;
+                      } else {
+                        setPlatformerPlayer(prevPlayer => ({
+                          ...prevPlayer,
+                          x: 100,
+                          y: 400,
+                          velX: 0,
+                          velY: 0
+                        }));
+                        return {
+                          ...prev,
+                          timeLimit: 60 * 60,
+                          lives: newLives,
+                          timeLimitActive: true,
+                          countdownStarted: false
+                        };
+                      }
+                    }
+
+                    return {
+                      ...prev,
+                      timeLimit: newTimeLimit,
+                      countdownStarted: newCountdown
+                    };
+                  });
+                }
+              }
+
+              setPlatformerGame(prev => ({
+                ...prev,
+                camera: {
+                  x: Math.max(0, platformerPlayer.x - canvas.width / 2),
+                  y: 0
+                }
+              }));
+
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+              const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+              gradient.addColorStop(0, '#87CEEB');
+              gradient.addColorStop(0.6, '#87CEEB');
+              gradient.addColorStop(0.6, '#90EE90');
+              gradient.addColorStop(1, '#90EE90');
+              ctx.fillStyle = gradient;
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+              for (let i = 0; i < 5; i++) {
+                let x = (i * 300 + 100) - (platformerGame.camera.x * 0.3);
+                let y = 50 + Math.sin(i) * 30;
+
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2);
+                ctx.arc(x + 25, y, 30, 0, Math.PI * 2);
+                ctx.arc(x + 50, y, 20, 0, Math.PI * 2);
+                ctx.fill();
+              }
+
+              ctx.save();
+              ctx.translate(-platformerGame.camera.x, 0);
+
+              platforms.forEach(platform => {
+                ctx.fillStyle = platform.color;
+                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+
+                ctx.strokeStyle = '#654321';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(platform.x, platform.y, platform.width, platform.height);
+              });
+
+              coins.forEach(coin => {
+                if (coin.collected) return;
+
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(coin.x, coin.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.strokeStyle = '#FFA500';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#FFFF00';
+                ctx.beginPath();
+                ctx.arc(coin.x - 3, coin.y - 3, 2, 0, Math.PI * 2);
+                ctx.fill();
+              });
+
+              enemies.forEach(enemy => {
+                if (!enemy.alive) return;
+
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(enemy.x + 6, enemy.y + 8, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(enemy.x + 18, enemy.y + 8, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = 'red';
+                ctx.fillRect(enemy.x + 8, enemy.y + 16, 8, 2);
+              });
+
+              ctx.fillStyle = '#FFD700';
+              ctx.beginPath();
+              ctx.arc(platformerPlayer.x + platformerPlayer.width/2, platformerPlayer.y + platformerPlayer.width/2, platformerPlayer.width/2 - 2, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.fillStyle = '#8B4513';
+              ctx.beginPath();
+              ctx.arc(platformerPlayer.x + platformerPlayer.width/2, platformerPlayer.y + platformerPlayer.width/2 - 3, platformerPlayer.width/2 - 4, Math.PI, Math.PI * 2);
+              ctx.fill();
+
+              ctx.fillStyle = 'black';
+              ctx.beginPath();
+              ctx.arc(platformerPlayer.x + platformerPlayer.width/2 - 6, platformerPlayer.y + platformerPlayer.width/2 - 2, 2, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.beginPath();
+              ctx.arc(platformerPlayer.x + platformerPlayer.width/2 + 6, platformerPlayer.y + platformerPlayer.width/2 - 2, 2, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.fillStyle = '#FFA500';
+              ctx.beginPath();
+              ctx.arc(platformerPlayer.x + platformerPlayer.width/2, platformerPlayer.y + platformerPlayer.width/2 + 2, 1, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.fillStyle = 'red';
+              ctx.beginPath();
+              if (platformerPlayer.direction === 1) {
+                ctx.moveTo(platformerPlayer.x + platformerPlayer.width/2 + 8, platformerPlayer.y + platformerPlayer.width/2);
+                ctx.lineTo(platformerPlayer.x + platformerPlayer.width/2 + 12, platformerPlayer.y + platformerPlayer.width/2 - 3);
+                ctx.lineTo(platformerPlayer.x + platformerPlayer.width/2 + 12, platformerPlayer.y + platformerPlayer.width/2 + 3);
+              } else {
+                ctx.moveTo(platformerPlayer.x + platformerPlayer.width/2 - 8, platformerPlayer.y + platformerPlayer.width/2);
+                ctx.lineTo(platformerPlayer.x + platformerPlayer.width/2 - 12, platformerPlayer.y + platformerPlayer.width/2 - 3);
+                ctx.lineTo(platformerPlayer.x + platformerPlayer.width/2 - 12, platformerPlayer.y + platformerPlayer.width/2 + 3);
+              }
+              ctx.fill();
+
+              ctx.restore();
+
+              if (platformerGame.countdownStarted && platformerGame.timeLimitActive) {
+                const seconds = Math.ceil(platformerGame.timeLimit / 60);
+
+                if (seconds <= 30) {
+                  const alpha = 0.1 + (Math.sin(platformerGame.timeLimit * 0.3) * 0.1);
+                  ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
+                  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                  if (seconds <= 10) {
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = 'bold 64px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.strokeStyle = '#FF0000';
+                    ctx.lineWidth = 3;
+
+                    const warningText = seconds.toString();
+                    ctx.strokeText(warningText, canvas.width/2, canvas.height/2);
+                    ctx.fillText(warningText, canvas.width/2, canvas.height/2);
+
+                    if (seconds <= 5) {
+                      ctx.font = 'bold 32px Arial';
+                      ctx.fillStyle = '#FFFF00';
+                      ctx.strokeStyle = '#FF0000';
+                      ctx.lineWidth = 2;
+                      ctx.strokeText('HURRY!', canvas.width/2, canvas.height/2 + 80);
+                      ctx.fillText('HURRY!', canvas.width/2, canvas.height/2 + 80);
+                    }
+                  }
+                }
+              }
+
+              animationFrameRef.current = requestAnimationFrame(gameLoop);
+            };
+
+            animationFrameRef.current = requestAnimationFrame(gameLoop);
+
+            return () => {
+              if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+              }
+            };
+          }, [gameMode, gameStarted, isKeyPressed, platformerKeys, platformerPlayer, platformerGame, platforms, coins, enemies]);
+
+          // Generate puzzle layouts
+          const generateSolvableLayout = (level) => {
+            const grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
+
+            if (level === 1) {
+              return {
+                grid,
+                endpoints: [
+                  { row: 0, col: 0, emoji: '⚡', type: 'source', id: 0 },
+                  { row: 5, col: 5, emoji: '🎯', type: 'target', id: 0 }
+                ]
+              };
+            }
+
+            if (level === 2) {
+              grid[1][3] = -1;
+              grid[3][1] = -1;
+              grid[3][4] = -1;
+              return {
+                grid,
+                endpoints: [
+                  { row: 0, col: 0, emoji: '🔴', type: 'source', id: 0 },
+                  { row: 2, col: 5, emoji: '🔴', type: 'target', id: 0 },
+                  { row: 5, col: 0, emoji: '🟢', type: 'source', id: 1 },
+                  { row: 3, col: 5, emoji: '🟢', type: 'target', id: 1 }
+                ]
+              };
+            }
+
+            if (level === 3) {
+              grid[2][2] = -1;
+              grid[2][3] = -1;
+              grid[3][2] = -1;
+              return {
+                grid,
+                endpoints: [
+                  { row: 0, col: 0, emoji: '🔴', type: 'source', id: 0 },
+                  { row: 1, col: 5, emoji: '🔴', type: 'target', id: 0 },
+                  { row: 4, col: 0, emoji: '🟢', type: 'source', id: 1 },
+                  { row: 5, col: 5, emoji: '🟢', type: 'target', id: 1 }
+                ]
+              };
+            }
+
+            if (level === 4) {
+              grid[2][2] = -1;
+              grid[2][3] = -1;
+              grid[3][2] = -1;
+              return {
+                grid,
+                endpoints: [
+                  { row: 5, col: 0, emoji: '🟢', type: 'source', id: 0 },
+                  { row: 0, col: 4, emoji: '🟢', type: 'target', id: 0 },
+                  { row: 5, col: 5, emoji: '🔴', type: 'source', id: 1 },
+                  { row: 1, col: 1, emoji: '🔴', type: 'target', id: 1 }
+                ]
+              };
+            }
+
+            if (level === 5) {
+              const obstacles = [];
+              const usedPositions = new Set();
+
+              const numObstacles = 3 + Math.floor(Math.random() * 3);
+              for (let i = 0; i < numObstacles; i++) {
+                let row, col;
+                do {
+                  row = 1 + Math.floor(Math.random() * 4);
+                  col = 1 + Math.floor(Math.random() * 4);
+                } while (usedPositions.has(`${row}-${col}`));
+
+                grid[row][col] = -1;
+                usedPositions.add(`${row}-${col}`);
+              }
+
+              const endpoints = [];
+              const colors = ['🔴', '🟢', '🔵'];
+              const numPairs = 2 + Math.floor(Math.random() * 2);
+
+              for (let i = 0; i < numPairs; i++) {
+                let sourceRow, sourceCol, targetRow, targetCol;
+
+                do {
+                  sourceRow = Math.floor(Math.random() * GRID_SIZE);
+                  sourceCol = Math.floor(Math.random() * GRID_SIZE);
+                } while (
+                  grid[sourceRow][sourceCol] === -1 ||
+                  usedPositions.has(`${sourceRow}-${sourceCol}`)
+                );
+                usedPositions.add(`${sourceRow}-${sourceCol}`);
+
+                do {
+                  targetRow = Math.floor(Math.random() * GRID_SIZE);
+                  targetCol = Math.floor(Math.random() * GRID_SIZE);
+                } while (
+                  grid[targetRow][targetCol] === -1 ||
+                  usedPositions.has(`${targetRow}-${targetCol}`) ||
+                  (targetRow === sourceRow && targetCol === sourceCol) ||
+                  Math.abs(targetRow - sourceRow) + Math.abs(targetCol - sourceCol) < 2
+                );
+                usedPositions.add(`${targetRow}-${targetCol}`);
+
+                endpoints.push(
+                  { row: sourceRow, col: sourceCol, emoji: colors[i], type: 'source', id: i },
+                  { row: targetRow, col: targetCol, emoji: colors[i], type: 'target', id: i }
+                );
+              }
+
+              return {
+                grid,
+                endpoints
+              };
+            }
+
+            if (level === 6) {
+              return {
+                grid,
+                endpoints: [
+                  { row: 0, col: 0, emoji: '🔴', type: 'source', id: 0 },
+                  { row: 1, col: 1, emoji: '🔴', type: 'target', id: 0 }
+                ]
+              };
+            }
+
+            return {
+              grid,
+              endpoints: [
+                { row: 0, col: 0, emoji: '🔴', type: 'source', id: 0 },
+                { row: 5, col: 5, emoji: '🔴', type: 'target', id: 0 }
+              ]
+            };
+          };
+
+          // Handle cell clicks for flow puzzle
+          const handleCellClick = (row, col) => {
+            if (!isKeyPressed || gameWon || grid[row][col] === -1) return;
+
+            const cellKey = `${row}-${col}`;
+            const clickedEndpoint = endpoints.find(ep => ep.row === row && ep.col === col);
+
+            if (clickedEndpoint) {
+              if (clickedEndpoint.type === 'source') {
+                setActivePath(clickedEndpoint.id);
+                const newPaths = new Map(paths);
+                newPaths.set(clickedEndpoint.id, [cellKey]);
+                setPaths(newPaths);
+              } else if (clickedEndpoint.type === 'target' && activePath === clickedEndpoint.id) {
+                const currentPath = paths.get(activePath) || [];
+                const lastCell = currentPath[currentPath.length - 1];
+                if (lastCell) {
+                  const [lastRow, lastCol] = lastCell.split('-').map(Number);
+                  const isAdjacent = Math.abs(row - lastRow) + Math.abs(col - lastCol) === 1;
+
+                  if (isAdjacent) {
+                    const newPaths = new Map(paths);
+                    newPaths.set(activePath, [...currentPath, cellKey]);
+                    setPaths(newPaths);
+                    setActivePath(null);
+
+                    const requiredPaths = new Set();
+                    endpoints.forEach(ep => {
+                      if (ep.type === 'source') requiredPaths.add(ep.id);
+                    });
+
+                    if (requiredPaths.size > 0 && [...requiredPaths].every(id => {
+                      const path = newPaths.get(id);
+                      return path && path.length > 1;
+                    })) {
+                      setGameWon(true);
+                    }
+                  }
+                }
+              }
+              return;
+            }
+
+            if (activePath === null) return;
+
+            const currentPath = paths.get(activePath) || [];
+            const isOccupied = Array.from(paths.entries()).some(([pathId, pathCells]) => {
+              return pathId !== activePath && pathCells.includes(cellKey);
+            });
+
+            if (isOccupied) return;
+
+            if (currentPath.includes(cellKey)) {
+              const cellIndex = currentPath.indexOf(cellKey);
+              const newPath = currentPath.slice(0, cellIndex);
+              const newPaths = new Map(paths);
+              newPaths.set(activePath, newPath);
+              setPaths(newPaths);
+            } else if (currentPath.length > 0) {
+              const lastCell = currentPath[currentPath.length - 1];
+              const [lastRow, lastCol] = lastCell.split('-').map(Number);
+              const isAdjacent = Math.abs(row - lastRow) + Math.abs(col - lastCol) === 1;
+
+              if (isAdjacent) {
+                const newPaths = new Map(paths);
+                newPaths.set(activePath, [...currentPath, cellKey]);
+                setPaths(newPaths);
+              }
+            }
+          };
+
+          // Next level
+          const nextLevel = () => {
+            const newLevel = currentLevel + 1;
+            setCurrentLevel(newLevel);
+            setRequiredKey(generateRandomKey());
+            setPowerTimer(0);
+            setIsKeyPressed(false);
+
+            if (newLevel >= 7) {
+              setGameMode('platformer');
+              initializePlatformer(newLevel);
+            } else {
+              initializePuzzle(newLevel);
+            }
+          };
+
+          // Get cell appearance
+          const getCellClass = (row, col) => {
+            const cellKey = `${row}-${col}`;
+            const endpoint = endpoints.find(ep => ep.row === row && ep.col === col);
+            const isObstacle = grid[row][col] === -1;
+
+            let pathId = null;
+            let isInActivePath = false;
+
+            for (const [id, pathCells] of paths.entries()) {
+              if (pathCells.includes(cellKey)) {
+                pathId = id;
+                if (id === activePath) isInActivePath = true;
+                break;
+              }
+            }
+
+            let classes = 'w-10 h-10 sm:w-12 sm:h-12 border-2 cursor-pointer transition-all duration-200 flex items-center justify-center text-lg font-bold ';
+
+            if (isObstacle) {
+              classes += 'bg-gray-800 border-gray-600 cursor-not-allowed';
+            } else if (endpoint) {
+              if (endpoint.type === 'source' && activePath === endpoint.id) {
+                classes += isKeyPressed
+                  ? 'bg-green-400 border-green-600 shadow-lg shadow-green-300 ring-2 ring-blue-400'
+                  : 'bg-green-200 border-green-400 ring-2 ring-blue-400';
+              } else if (endpoint.type === 'target' && activePath === endpoint.id) {
+                classes += isKeyPressed
+                  ? 'bg-purple-400 border-purple-600 shadow-lg shadow-purple-300 ring-2 ring-blue-400'
+                  : 'bg-purple-200 border-purple-400 ring-2 ring-blue-400';
+              } else {
+                const pathForEndpoint = paths.get(endpoint.id);
+                const isComplete = pathForEndpoint && pathForEndpoint.length > 1;
+                if (isComplete) {
+                  classes += 'bg-green-300 border-green-500 shadow-md';
+                } else {
+                  classes += isKeyPressed
+                    ? 'bg-gray-200 border-gray-400 hover:bg-gray-100'
+                    : 'bg-gray-100 border-gray-300 opacity-70';
+                }
+              }
+            } else if (pathId !== null) {
+              const pathColors = [
+                'bg-red-300 border-red-500',
+                'bg-green-300 border-green-500',
+                'bg-blue-300 border-blue-500',
+                'bg-yellow-300 border-yellow-500'
+              ];
+              const colorClass = pathColors[pathId % pathColors.length];
+
+              if (isInActivePath) {
+                classes += isKeyPressed
+                  ? `${colorClass} shadow-md ring-1 ring-blue-300`
+                  : `${colorClass.replace('300', '200')} ring-1 ring-blue-300`;
+              } else {
+                classes += isKeyPressed
+                  ? `${colorClass} shadow-sm`
+                  : `${colorClass.replace('300', '200')}`;
+              }
+            } else {
+              classes += isKeyPressed
+                ? 'bg-white border-gray-300 hover:bg-gray-50'
+                : 'bg-gray-100 border-gray-300 opacity-50';
+            }
+
+            return classes;
+          };
+
+          const getCellContent = (row, col) => {
+            const endpoint = endpoints.find(ep => ep.row === row && ep.col === col);
+            const isObstacle = grid[row][col] === -1;
+
+            if (isObstacle) return '■';
+            if (endpoint) return endpoint.emoji;
+            return '';
+          };
+
+          if (!deviceSelected) {
+            return React.createElement('div', {
+              className: "flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-purple-50 to-blue-100 p-8"
+            }, React.createElement('div', {
+              className: "text-center bg-white rounded-lg shadow-lg p-8 max-w-md"
+            },
+              React.createElement('h1', {
+                className: "text-3xl font-bold text-gray-800 mb-6"
+              }, "Device Type Selection"),
+              React.createElement('p', {
+                className: "text-gray-600 mb-6"
+              }, "Are you playing on mobile or desktop? This helps us optimize the experience."),
+              React.createElement('div', {
+                className: "space-y-4"
+              },
+                React.createElement('button', {
+                  onClick: () => {
+                    setDeviceType('mobile');
+                    setDeviceSelected(true);
+                  },
+                  className: "w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                }, React.createElement('span', null, "📱"), " Mobile / Tablet"),
+                React.createElement('button', {
+                  onClick: () => {
+                    setDeviceType('desktop');
+                    setDeviceSelected(true);
+                  },
+                  className: "w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                }, React.createElement('span', null, "💻"), " Desktop / Laptop")
+              )
+            ));
+          }
+
+          if (!gameStarted) {
+            return React.createElement('div', {
+              className: "flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 p-8"
+            }, React.createElement('div', {
+              className: "text-center bg-white rounded-lg shadow-lg p-8 max-w-md"
+            },
+              React.createElement('h1', {
+                className: "text-3xl font-bold text-gray-800 mb-4"
+              }, "Cooperative Flow Puzzle"),
+              React.createElement('div', {
+                className: "text-gray-600 mb-6 space-y-2"
+              },
+                React.createElement('p', null, React.createElement('strong', null, "Player 1 (Power):"), " Hold down the assigned key to power the grid"),
+                React.createElement('p', null, React.createElement('strong', null, "Player 2 (Solver):"), " Click cells to create a path from ⚡ to 🎯"),
+                React.createElement('p', {
+                  className: "text-sm text-gray-500"
+                }, "You can only build the path while the power is on!")
+              ),
+              React.createElement('button', {
+                onClick: startGame,
+                className: "bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              }, "Start Game"),
+
+              React.createElement('div', {
+                className: "mt-6 p-3 bg-red-50 border border-red-200 rounded-lg"
+              },
+                React.createElement('p', {
+                  className: "text-xs text-red-800 font-semibold mb-1"
+                }, React.createElement('span', null, "⚠️"), " ANTI-PIRACY NOTICE"),
+                React.createElement('p', {
+                  className: "text-xs text-red-700"
+                }, "This game is protected by copyright. Unauthorized copying, distribution, or modification is strictly prohibited and may result in legal action.")
+              )
+            ));
+          }
+
+          return React.createElement('div', {
+            className: "min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 p-2 sm:p-4"
+          }, React.createElement('div', {
+            className: "max-w-4xl mx-auto"
+          },
+
+            // Loading Screen
+            isLoading && React.createElement('div', {
+              className: "fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40"
+            }, React.createElement('div', {
+              className: "bg-white rounded-lg p-6 sm:p-8 text-center shadow-xl"
+            },
+              React.createElement('div', {
+                className: "animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-blue-500 mx-auto mb-4"
+              }),
+              React.createElement('h3', {
+                className: "text-lg sm:text-xl font-bold text-gray-800 mb-2"
+              }, `Loading Level ${currentLevel}`),
+              React.createElement('p', {
+                className: "text-gray-600 text-sm sm:text-base"
+              }, gameMode === 'puzzle' ? 'Generating puzzle...' : 'Building platforms...')
+            )),
+
+            // Microtransaction Popup
+            showMicrotransaction && React.createElement('div', {
+              className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            }, React.createElement('div', {
+              className: "bg-white rounded-lg p-4 sm:p-6 max-w-md mx-4 shadow-xl border-4 border-yellow-400"
+            },
+              React.createElement('h3', {
+                className: "text-xl sm:text-2xl font-bold text-yellow-600 mb-4 text-center"
+              }, React.createElement('span', null, "💰"), " Skip Level"),
+              React.createElement('div', {
+                className: "text-center mb-6"
+              },
+                React.createElement('div', {
+                  className: "text-3xl sm:text-4xl font-bold text-green-600 mb-2"
+                }, "$0.45"),
+                React.createElement('p', {
+                  className: "text-gray-700 mb-4 text-sm sm:text-base"
+                }, "Skip this challenging level and advance immediately!"),
+                React.createElement('div', {
+                  className: "bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4"
+                },
+                  React.createElement('p', {
+                    className: "text-xs sm:text-sm text-yellow-800"
+                  }, React.createElement('span', null, "⚡"), " Instant progression", React.createElement('br'), React.createElement('span', null, "🎯"), " No more frustration", React.createElement('br'), React.createElement('span', null, "🏆"), " Keep the fun going!")
+                )
+              ),
+              React.createElement('div', {
+                className: "space-y-3"
+              },
+                React.createElement('button', {
+                  onClick: () => {
+                    setShowMicrotransaction(false);
+                    setHasPurchasedSkip(true);
+                    setTimeout(() => {
+                      nextLevel();
+                      setHasPurchasedSkip(false);
+                    }, 1000);
+                  },
+                  className: "w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-colors text-base sm:text-lg"
+                }, React.createElement('span', null, "💳"), " Purchase & Skip - $0.45"),
+                React.createElement('button', {
+                  onClick: () => setShowMicrotransaction(false),
+                  className: "w-full bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-6 rounded-lg transition-colors text-sm sm:text-base"
+                }, "Cancel")
+              ),
+              React.createElement('p', {
+                className: "text-xs text-gray-500 text-center mt-4"
+              }, "*This is a demo - no real payment will be processed")
+            )),
+
+            // Purchase Success Animation
+            hasPurchasedSkip && React.createElement('div', {
+              className: "fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+            }, React.createElement('div', {
+              className: "bg-white rounded-lg p-6 sm:p-8 text-center shadow-xl"
+            },
+              React.createElement('div', {
+                className: "text-4xl sm:text-6xl mb-4"
+              }, React.createElement('span', null, "✅")),
+              React.createElement('h3', {
+                className: "text-xl sm:text-2xl font-bold text-green-600 mb-2"
+              }, "Purchase Successful!"),
+              React.createElement('p', {
+                className: "text-gray-700 text-sm sm:text-base"
+              }, "Skipping to next level..."),
+              React.createElement('div', {
+                className: "animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-green-500 mx-auto mt-4"
+              })
+            )),
+
+            // Header
+            React.createElement('div', {
+              className: "text-center mb-4 sm:mb-6"
+            },
+              React.createElement('h1', {
+                className: "text-2xl sm:text-3xl font-bold text-gray-800 mb-2"
+              }, gameMode === 'puzzle' ? 'Cooperative Flow Puzzle' : 'Cooperative Platformer'),
+              React.createElement('div', {
+                className: "flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 text-sm"
+              },
+                React.createElement('div', {
+                  className: "bg-white rounded-lg px-3 sm:px-4 py-2 shadow-md"
+                }, React.createElement('span', { className: "font-semibold" }, "Level:"), ` ${currentLevel}`),
+                React.createElement('div', {
+                  className: "bg-white rounded-lg px-3 sm:px-4 py-2 shadow-md"
+                }, React.createElement('span', { className: "font-semibold" }, "Power Time:"), ` ${(powerTimer / 10).toFixed(1)}s`),
+                React.createElement('button', {
+                  onClick: () => setShowMicrotransaction(true),
+                  className: "bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-3 sm:px-4 rounded-lg transition-colors text-xs sm:text-sm shadow-md border-2 border-yellow-400"
+                }, React.createElement('span', null, "💰"), " Skip Level - $0.45")
+              )
+            ),
+
+            // Power Status
+            React.createElement('div', {
+              className: "text-center mb-4 sm:mb-6"
+            }, React.createElement('div', {
+              className: `inline-block px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-base sm:text-lg transition-all duration-200 ${
+                isKeyPressed
+                  ? 'bg-green-400 text-green-800 shadow-lg shadow-green-200'
+                  : 'bg-red-100 text-red-800'
+              }`
+            }, deviceType === 'mobile' ? (
+              isKeyPressed ? React.createElement('span', null, "✅ Screen Held - Power On!") : React.createElement('span', null, "❌ Hold Screen to Power Grid")
+            ) : (
+              isKeyPressed ? `✅ Powering (${requiredKey} held)` : `❌ Hold "${requiredKey}" key`
+            ))),
+
+            gameMode === 'puzzle' ? [
+              // Game Grid
+              React.createElement('div', {
+                className: "flex justify-center mb-4 sm:mb-6",
+                key: "grid"
+              }, React.createElement('div', {
+                className: "grid grid-cols-6 gap-1 bg-gray-300 p-2 sm:p-4 rounded-lg shadow-lg"
+              }, grid.map((row, rowIndex) =>
+                row.map((cell, colIndex) => (
+                  React.createElement('button', {
+                    key: `${rowIndex}-${colIndex}`,
+                    className: getCellClass(rowIndex, colIndex),
+                    onClick: () => handleCellClick(rowIndex, colIndex),
+                    disabled: !isKeyPressed || gameWon
+                  }, getCellContent(rowIndex, colIndex))
+                ))
+              ))),
+
+              // Instructions
+              React.createElement('div', {
+                className: "text-center text-gray-600 mb-4 px-4",
+                key: "instructions"
+              },
+                currentLevel === 1 ? [
+                  React.createElement('p', { key: "p1", className: "text-sm sm:text-base" },
+                    deviceType === 'mobile'
+                      ? 'Player 1: Hold your finger on the screen to power the grid'
+                      : 'Player 1: Hold the assigned key to power the grid'
+                  ),
+                  React.createElement('p', { key: "p2", className: "text-sm sm:text-base" }, "Player 2: Click adjacent cells to build a path from ⚡ to 🎯"),
+                  React.createElement('p', { key: "p3", className: "text-xs sm:text-sm" }, "Path only works when Player 1 provides power!")
+                ] : [
+                  React.createElement('p', { key: "p1", className: "text-sm sm:text-base" },
+                    deviceType === 'mobile'
+                      ? 'Player 1: Hold your finger on the screen to power the grid'
+                      : 'Player 1: Hold the assigned key to power the grid'
+                  ),
+                  React.createElement('p', { key: "p2", className: "text-sm sm:text-base" }, "Player 2: Connect matching emoji pairs with unique paths"),
+                  React.createElement('p', { key: "p3", className: "text-xs sm:text-sm" }, "Click a source emoji to start, then build a path to its matching target"),
+                  React.createElement('p', { key: "p4", className: "text-xs sm:text-sm" }, "Paths cannot overlap! Power required to build."),
+                  activePath !== null && React.createElement('p', {
+                    className: "text-blue-600 font-semibold",
+                    key: "active"
+                  }, `Building path for: ${endpoints.find(ep => ep.id === activePath && ep.type === 'source')?.emoji}`)
+                ]
+              )
+            ] : [
+              // Advanced Platformer Game
+              React.createElement('div', {
+                className: "flex justify-center mb-4 sm:mb-6",
+                key: "platformer"
+              }, React.createElement('div', {
+                className: "relative border-2 sm:border-4 border-gray-800 rounded-lg overflow-hidden bg-gradient-to-b from-sky-200 to-green-200"
+              },
+                React.createElement('canvas', {
+                  ref: canvasRef,
+                  width: "800",
+                  height: "600",
+                  className: "block bg-gradient-to-b from-sky-200 via-sky-200 to-green-200"
+                }),
+
+                // UI Overlay
+                React.createElement('div', {
+                  className: "absolute top-1 sm:top-2 left-1 sm:left-2 text-white font-bold text-shadow z-10 text-xs sm:text-sm"
+                },
+                  React.createElement('div', null, "Score: ", React.createElement('span', null, platformerGame.score)),
+                  React.createElement('div', null, "Lives: ", React.createElement('span', null, platformerGame.lives)),
+                  React.createElement('div', null, "Level: ", React.createElement('span', null, platformerGame.level)),
+                  platformerGame.timeLimitActive && React.createElement('div', {
+                    className: `text-sm sm:text-lg font-bold ${platformerGame.countdownStarted ? 'text-red-500' : 'text-red-400'}`
+                  }, "Time: ", React.createElement('span', null, Math.ceil(platformerGame.timeLimit / 60)))
+                ),
+
+                // Instructions Overlay
+                React.createElement('div', {
+                  className: "absolute bottom-1 sm:bottom-2 right-1 sm:right-2 text-white text-xs sm:text-xs text-shadow z-10"
+                },
+                  React.createElement('div', null, "WASD or Arrow Keys + Space to move and jump"),
+                  React.createElement('div', null, "Collect coins and avoid enemies!"),
+                  React.createElement('div', null, "Reach 500 points to activate time limit!")
+                )
+              )),
+
+              // Platformer Instructions
+              React.createElement('div', {
+                className: "text-center text-gray-600 mb-4 px-4",
+                key: "platformer-instructions"
+              },
+                React.createElement('p', { className: "text-sm sm:text-base" },
+                  deviceType === 'mobile'
+                    ? 'Player 1: Hold your finger on the screen to give power'
+                    : `Player 1: Hold "${requiredKey}" to give power`
+                ),
+                React.createElement('p', { className: "text-sm sm:text-base" }, "Player 2: Use WASD or Arrow Keys to move, Space to jump"),
+                React.createElement('p', {
+                  className: "text-xs sm:text-sm text-red-600"
+                }, "If you fall off or lose all lives, you'll restart at puzzle level 1!")
+              )
+            ],
+
+            // Win State
+            gameWon && React.createElement('div', {
+              className: "text-center px-4"
+            },
+              React.createElement('div', {
+                className: "bg-green-100 border border-green-400 rounded-lg p-4 mb-4 inline-block"
+              },
+                React.createElement('h2', {
+                  className: "text-xl sm:text-2xl font-bold text-green-800 mb-2"
+                }, gameMode === 'puzzle' ? '🎉 Level Complete!' : '🎉 Platformer Level Complete!'),
+                gameMode === 'puzzle' && currentLevel === 6 ?
+                  React.createElement('p', {
+                    className: "text-green-700 text-sm sm:text-base"
+                  }, "That was easy! But now the real challenge begins... 🎮") :
+                gameMode === 'puzzle' ?
+                  React.createElement('p', {
+                    className: "text-green-700 text-sm sm:text-base"
+                  }, `Great teamwork! You completed level ${currentLevel} in ${(powerTimer / 10).toFixed(1)} seconds.`) :
+                  React.createElement('p', {
+                    className: "text-green-700 text-sm sm:text-base"
+                  }, "Excellent coordination! You navigated the platformer challenge successfully.")
+              ),
+              React.createElement('div', {
+                className: "space-y-3 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center"
+              },
+                React.createElement('button', {
+                  onClick: nextLevel,
+                  className: "w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition-colors text-sm sm:text-base"
+                }, gameMode === 'puzzle' && currentLevel === 6 ? 'Enter Platformer Mode!' : 'Next Level'),
+                React.createElement('button', {
+                  onClick: () => setGameStarted(false),
+                  className: "w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition-colors text-sm sm:text-base"
+                }, "New Game")
+              ),
+
+              React.createElement('div', {
+                className: "mt-6 p-3 bg-red-50 border border-red-200 rounded-lg max-w-md mx-auto"
+              },
+                React.createElement('p', {
+                  className: "text-xs text-red-800 font-semibold mb-1"
+                }, React.createElement('span', null, "⚠️"), " ANTI-PIRACY NOTICE"),
+                React.createElement('p', {
+                  className: "text-xs text-red-700"
+                }, "This game is protected by copyright. Unauthorized copying, distribution, or modification is strictly prohibited and may result in legal action.")
+              )
+            )
+          ));
+        };
+
+        ReactDOM.render(React.createElement(CooperativeFlowPuzzle), document.getElementById('root'));
+    </script>
 
           // Advanced solvability checker using backtracking
           const isAdvancedSolvable = (grid, endpoints) => {

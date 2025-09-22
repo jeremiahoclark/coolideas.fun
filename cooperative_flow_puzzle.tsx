@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const CooperativeFlowPuzzle = () => {
+  const [deviceSelected, setDeviceSelected] = useState(false);
+  const [deviceType, setDeviceType] = useState('');
   const [gameStarted, setGameStarted] = useState(false);
   const [requiredKey, setRequiredKey] = useState('');
   const [isKeyPressed, setIsKeyPressed] = useState(false);
@@ -41,7 +43,7 @@ const CooperativeFlowPuzzle = () => {
     height: 32,
     velX: 0,
     velY: 0,
-    speed: 5,
+    speed: 3,
     jumpPower: 15,
     onGround: false,
     direction: 1
@@ -57,148 +59,8 @@ const CooperativeFlowPuzzle = () => {
     const keys = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'S', 'F', 'G', 'H', 'J', 'K', 'L', 'Z', 'X', 'C', 'V', 'B', 'N', 'M'];
     return keys[Math.floor(Math.random() * keys.length)];
   };
-  
-  // Advanced solvability checker using backtracking
-  const isAdvancedSolvable = (grid, endpoints) => {
-    if (endpoints.length === 0) return false;
-    
-    const pairs = [];
-    const sources = endpoints.filter(ep => ep.type === 'source');
-    sources.forEach(source => {
-      const target = endpoints.find(ep => ep.type === 'target' && ep.id === source.id);
-      if (target) {
-        pairs.push({ 
-          id: source.id,
-          source: { row: source.row, col: source.col },
-          target: { row: target.row, col: target.col }
-        });
-      }
-    });
-    
-    if (pairs.length === 0) return false;
-    
-    const usedCells = new Set();
-    const foundPaths = new Map();
-    
-    const findPath = (start, end, blocked) => {
-      const visited = new Set();
-      const queue = [{ pos: start, path: [start] }];
-      
-      while (queue.length > 0) {
-        const { pos, path } = queue.shift();
-        const key = `${pos.row}-${pos.col}`;
-        
-        if (visited.has(key)) continue;
-        visited.add(key);
-        
-        if (pos.row === end.row && pos.col === end.col) {
-          return path;
-        }
-        
-        for (const [dr, dc] of [[-1,0], [1,0], [0,-1], [0,1]]) {
-          const newRow = pos.row + dr;
-          const newCol = pos.col + dc;
-          const newKey = `${newRow}-${newCol}`;
-          
-          if (newRow >= 0 && newRow < GRID_SIZE && 
-              newCol >= 0 && newCol < GRID_SIZE &&
-              grid[newRow][newCol] !== -1 &&
-              !blocked.has(newKey) &&
-              !visited.has(newKey)) {
-            
-            queue.push({
-              pos: { row: newRow, col: newCol },
-              path: [...path, { row: newRow, col: newCol }]
-            });
-          }
-        }
-      }
-      return null;
-    };
-    
-    const backtrack = (pairIndex) => {
-      if (pairIndex >= pairs.length) {
-        return true;
-      }
-      
-      const pair = pairs[pairIndex];
-      const blockedCells = new Set(usedCells);
-      
-      const path = findPath(pair.source, pair.target, blockedCells);
-      
-      if (path) {
-        const pathKeys = path.map(p => `${p.row}-${p.col}`);
-        pathKeys.forEach(key => usedCells.add(key));
-        foundPaths.set(pair.id, path);
-        
-        if (backtrack(pairIndex + 1)) {
-          return true;
-        }
-        
-        pathKeys.forEach(key => usedCells.delete(key));
-        foundPaths.delete(pair.id);
-      }
-      
-      return false;
-    };
-    
-    return backtrack(0);
-  };
 
-  // Check if puzzle is solvable
-  const isPuzzleSolvable = (grid, endpoints) => {
-    if (endpoints.length === 0) return false;
-    
-    const pairs = [];
-    const sources = endpoints.filter(ep => ep.type === 'source');
-    sources.forEach(source => {
-      const target = endpoints.find(ep => ep.type === 'target' && ep.id === source.id);
-      if (target) {
-        pairs.push({ source, target });
-      }
-    });
-    
-    if (pairs.length === 0) return false;
-    
-    if (pairs.length <= 2) {
-      for (const pair of pairs) {
-        const visited = new Set();
-        const queue = [{ row: pair.source.row, col: pair.source.col }];
-        let found = false;
-        
-        while (queue.length > 0 && !found) {
-          const { row, col } = queue.shift();
-          
-          if (row === pair.target.row && col === pair.target.col) {
-            found = true;
-            break;
-          }
-          
-          const key = `${row}-${col}`;
-          if (visited.has(key)) continue;
-          visited.add(key);
-          
-          for (const [dr, dc] of [[-1,0], [1,0], [0,-1], [0,1]]) {
-            const newRow = row + dr;
-            const newCol = col + dc;
-            
-            if (newRow >= 0 && newRow < GRID_SIZE && newCol >= 0 && newCol < GRID_SIZE) {
-              if (grid[newRow][newCol] !== -1) {
-                queue.push({ row: newRow, col: newCol });
-              }
-            }
-          }
-        }
-        
-        if (!found) return false;
-      }
-      return true;
-    } else {
-      return isAdvancedSolvable(grid, endpoints);
-    }
-  };
-
-  // Generate guaranteed solvable puzzle layouts
+  // Generate puzzle layouts
   const generateSolvableLayout = (level) => {
     const grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
     
@@ -228,77 +90,30 @@ const CooperativeFlowPuzzle = () => {
     }
     
     if (level === 3) {
-      // Level 3: Randomized layout each time
-      const obstacles = [];
-      const usedPositions = new Set();
-      
-      // Add 3-4 random obstacles
-      const numObstacles = 3 + Math.floor(Math.random() * 2);
-      for (let i = 0; i < numObstacles; i++) {
-        let row, col;
-        do {
-          row = 1 + Math.floor(Math.random() * 4); // Avoid edges
-          col = 1 + Math.floor(Math.random() * 4);
-        } while (usedPositions.has(`${row}-${col}`));
-        
-        grid[row][col] = -1;
-        usedPositions.add(`${row}-${col}`);
-        obstacles.push({row, col});
-      }
-      
-      // Generate random endpoint positions for 2 pairs
-      const endpoints = [];
-      const colors = ['🔴', '🟢'];
-      
-      for (let i = 0; i < 2; i++) {
-        let sourceRow, sourceCol, targetRow, targetCol;
-        
-        // Find random source position
-        do {
-          sourceRow = Math.floor(Math.random() * GRID_SIZE);
-          sourceCol = Math.floor(Math.random() * GRID_SIZE);
-        } while (
-          grid[sourceRow][sourceCol] === -1 ||
-          usedPositions.has(`${sourceRow}-${sourceCol}`)
-        );
-        usedPositions.add(`${sourceRow}-${sourceCol}`);
-        
-        // Find random target position
-        do {
-          targetRow = Math.floor(Math.random() * GRID_SIZE);
-          targetCol = Math.floor(Math.random() * GRID_SIZE);
-        } while (
-          grid[targetRow][targetCol] === -1 ||
-          usedPositions.has(`${targetRow}-${targetCol}`) ||
-          (targetRow === sourceRow && targetCol === sourceCol) ||
-          Math.abs(targetRow - sourceRow) + Math.abs(targetCol - sourceCol) < 3
-        );
-        usedPositions.add(`${targetRow}-${targetCol}`);
-        
-        endpoints.push(
-          { row: sourceRow, col: sourceCol, emoji: colors[i], type: 'source', id: i },
-          { row: targetRow, col: targetCol, emoji: colors[i], type: 'target', id: i }
-        );
-      }
-      
-      return {
-        grid,
-        endpoints
-      };
-    }
-    
-    if (level === 4) {
-      // Level 4: Specific pattern - green=up down forward down left down forward red=up down left down down left
+      // Level 3 layout matching the provided image
       grid[2][2] = -1;
       grid[2][3] = -1;
       grid[3][2] = -1;
       return {
         grid,
         endpoints: [
-          // Green path: up down forward down left down forward (starting from 5,0)
+          { row: 0, col: 0, emoji: '🔴', type: 'source', id: 0 },
+          { row: 1, col: 5, emoji: '🔴', type: 'target', id: 0 },
+          { row: 4, col: 0, emoji: '🟢', type: 'source', id: 1 },
+          { row: 5, col: 5, emoji: '🟢', type: 'target', id: 1 }
+        ]
+      };
+    }
+    
+    if (level === 4) {
+      grid[2][2] = -1;
+      grid[2][3] = -1;
+      grid[3][2] = -1;
+      return {
+        grid,
+        endpoints: [
           { row: 5, col: 0, emoji: '🟢', type: 'source', id: 0 },
           { row: 0, col: 4, emoji: '🟢', type: 'target', id: 0 },
-          // Red path: up down left down down left (starting from 5,5)
           { row: 5, col: 5, emoji: '🔴', type: 'source', id: 1 },
           { row: 1, col: 1, emoji: '🔴', type: 'target', id: 1 }
         ]
@@ -306,33 +121,29 @@ const CooperativeFlowPuzzle = () => {
     }
     
     if (level === 5) {
-      // Level 5: Randomized layout each time
+      // Randomized layout
       const obstacles = [];
       const usedPositions = new Set();
       
-      // Add 3-5 random obstacles
       const numObstacles = 3 + Math.floor(Math.random() * 3);
       for (let i = 0; i < numObstacles; i++) {
         let row, col;
         do {
-          row = 1 + Math.floor(Math.random() * 4); // Avoid edges
+          row = 1 + Math.floor(Math.random() * 4);
           col = 1 + Math.floor(Math.random() * 4);
         } while (usedPositions.has(`${row}-${col}`));
         
         grid[row][col] = -1;
         usedPositions.add(`${row}-${col}`);
-        obstacles.push({row, col});
       }
       
-      // Generate random endpoint positions
       const endpoints = [];
       const colors = ['🔴', '🟢', '🔵'];
-      const numPairs = 2 + Math.floor(Math.random() * 2); // 2-3 pairs
+      const numPairs = 2 + Math.floor(Math.random() * 2);
       
       for (let i = 0; i < numPairs; i++) {
         let sourceRow, sourceCol, targetRow, targetCol;
         
-        // Find random source position
         do {
           sourceRow = Math.floor(Math.random() * GRID_SIZE);
           sourceCol = Math.floor(Math.random() * GRID_SIZE);
@@ -342,7 +153,6 @@ const CooperativeFlowPuzzle = () => {
         );
         usedPositions.add(`${sourceRow}-${sourceCol}`);
         
-        // Find random target position
         do {
           targetRow = Math.floor(Math.random() * GRID_SIZE);
           targetCol = Math.floor(Math.random() * GRID_SIZE);
@@ -481,7 +291,27 @@ const CooperativeFlowPuzzle = () => {
     return levelEndX;
   };
 
-  // Initialize platformer level
+  // Initialize puzzle
+  const initializePuzzle = useCallback(async (level) => {
+    setIsLoading(true);
+    setUnsolvableError(false);
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    if (level <= 6) {
+      const layout = generateSolvableLayout(level);
+      
+      setGrid(layout.grid);
+      setEndpoints(layout.endpoints);
+      setPaths(new Map());
+      setActivePath(null);
+      setGameWon(false);
+    }
+    
+    setIsLoading(false);
+  }, []);
+
+  // Initialize platformer
   const initializePlatformer = useCallback(async (level) => {
     setIsLoading(true);
     
@@ -517,34 +347,6 @@ const CooperativeFlowPuzzle = () => {
     setIsLoading(false);
   }, []);
 
-  // Initialize puzzle grid
-  const initializePuzzle = useCallback(async (level) => {
-    setIsLoading(true);
-    setUnsolvableError(false);
-    
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    if (level <= 6) {
-      const layout = generateSolvableLayout(level);
-      
-      const isSolvable = isPuzzleSolvable(layout.grid, layout.endpoints);
-      
-      if (!isSolvable) {
-        setUnsolvableError(true);
-        setIsLoading(false);
-        return;
-      }
-      
-      setGrid(layout.grid);
-      setEndpoints(layout.endpoints);
-      setPaths(new Map());
-      setActivePath(null);
-      setGameWon(false);
-    }
-    
-    setIsLoading(false);
-  }, []);
-
   // Start new game
   const startGame = () => {
     setRequiredKey(generateRandomKey());
@@ -555,12 +357,12 @@ const CooperativeFlowPuzzle = () => {
     setPowerTimer(0);
   };
 
-  // Handle keyboard events
+  // Handle keyboard events and touch events
   useEffect(() => {
     if (!gameStarted) return;
     
     const handleKeyDown = (event) => {
-      if (event.key.toUpperCase() === requiredKey) {
+      if (deviceType === 'desktop' && event.key.toUpperCase() === requiredKey) {
         setIsKeyPressed(true);
       }
       
@@ -571,7 +373,7 @@ const CooperativeFlowPuzzle = () => {
     };
     
     const handleKeyUp = (event) => {
-      if (event.key.toUpperCase() === requiredKey) {
+      if (deviceType === 'desktop' && event.key.toUpperCase() === requiredKey) {
         setIsKeyPressed(false);
       }
       
@@ -580,15 +382,40 @@ const CooperativeFlowPuzzle = () => {
         setPlatformerKeys(prev => ({ ...prev, [key]: false }));
       }
     };
+
+    const handleTouchStart = (event) => {
+      if (deviceType === 'mobile') {
+        event.preventDefault();
+        setIsKeyPressed(true);
+      }
+    };
+
+    const handleTouchEnd = (event) => {
+      if (deviceType === 'mobile') {
+        event.preventDefault();
+        setIsKeyPressed(false);
+      }
+    };
     
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     
+    if (deviceType === 'mobile') {
+      window.addEventListener('touchstart', handleTouchStart, { passive: false });
+      window.addEventListener('touchend', handleTouchEnd, { passive: false });
+      window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+    }
+    
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      if (deviceType === 'mobile') {
+        window.removeEventListener('touchstart', handleTouchStart);
+        window.removeEventListener('touchend', handleTouchEnd);
+        window.removeEventListener('touchcancel', handleTouchEnd);
+      }
     };
-  }, [gameStarted, requiredKey, gameMode]);
+  }, [gameStarted, requiredKey, gameMode, deviceType]);
 
   // Power timer
   useEffect(() => {
@@ -601,7 +428,7 @@ const CooperativeFlowPuzzle = () => {
     return () => clearInterval(timer);
   }, [isKeyPressed, gameStarted, gameWon]);
 
-  // Collision detection for platformer
+  // Collision detection
   const checkCollision = (rect1, rect2) => {
     return rect1.x < rect2.x + rect2.width &&
            rect1.x + rect1.width > rect2.x &&
@@ -628,18 +455,11 @@ const CooperativeFlowPuzzle = () => {
         if (platformerGame.won) {
           ctx.fillStyle = '#FFD700';
           ctx.fillText('VICTORY!', canvas.width/2, canvas.height/2 - 100);
-          ctx.fillStyle = 'white';
-          ctx.font = '32px Arial';
-          ctx.fillText('You completed the platformer!', canvas.width/2, canvas.height/2 - 50);
-        } else if (platformerGame.timeUp) {
-          ctx.fillStyle = '#FF4444';
-          ctx.fillText('TIME\'S UP!', canvas.width/2, canvas.height/2 - 100);
         } else {
           ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2 - 50);
         }
         
         ctx.font = '24px Arial';
-        ctx.fillText('Final Score: ' + platformerGame.score, canvas.width/2, canvas.height/2);
         ctx.fillText('Press R to Restart at Puzzle Level 1', canvas.width/2, canvas.height/2 + 80);
         
         if (platformerKeys['r']) {
@@ -699,22 +519,18 @@ const CooperativeFlowPuzzle = () => {
           if (newPlayer.x < 0) newPlayer.x = 0;
           
           if (newPlayer.y > canvas.height) {
-            // Player fell off the world - lose a life
             setPlatformerGame(prev => {
               const newLives = prev.lives - 1;
               if (newLives <= 0) {
-                // All lives lost - restart at puzzle level 1
                 setCurrentLevel(1);
                 setGameMode('puzzle');
                 setRequiredKey(generateRandomKey());
                 initializePuzzle(1);
                 return prev;
               } else {
-                // Still have lives - respawn at start of current platformer level
                 return { ...prev, lives: newLives };
               }
             });
-            // Reset player position
             return {
               ...prev,
               x: 100,
@@ -796,14 +612,12 @@ const CooperativeFlowPuzzle = () => {
                 setPlatformerGame(prev => {
                   const newLives = prev.lives - 1;
                   if (newLives <= 0) {
-                    // All lives lost - restart at puzzle level 1
                     setCurrentLevel(1);
                     setGameMode('puzzle');
                     setRequiredKey(generateRandomKey());
                     initializePuzzle(1);
                     return prev;
                   } else {
-                    // Still have lives - respawn player at start of current platformer level
                     setPlatformerPlayer(prevPlayer => ({
                       ...prevPlayer,
                       x: 100,
@@ -831,17 +645,14 @@ const CooperativeFlowPuzzle = () => {
             }
             
             if (newTimeLimit <= 0) {
-              // Time's up - lose a life
               const newLives = prev.lives - 1;
               if (newLives <= 0) {
-                // All lives lost - restart at puzzle level 1
                 setCurrentLevel(1);
                 setGameMode('puzzle');
                 setRequiredKey(generateRandomKey());
                 initializePuzzle(1);
                 return prev;
               } else {
-                // Still have lives - respawn at start of current platformer level with reset timer
                 setPlatformerPlayer(prevPlayer => ({
                   ...prevPlayer,
                   x: 100,
@@ -851,7 +662,7 @@ const CooperativeFlowPuzzle = () => {
                 }));
                 return {
                   ...prev,
-                  timeLimit: 60 * 60, // Reset timer to 1 minute
+                  timeLimit: 60 * 60,
                   lives: newLives,
                   timeLimitActive: true,
                   countdownStarted: false
@@ -1032,7 +843,6 @@ const CooperativeFlowPuzzle = () => {
     if (!isKeyPressed || gameWon || grid[row][col] === -1) return;
     
     const cellKey = `${row}-${col}`;
-    
     const clickedEndpoint = endpoints.find(ep => ep.row === row && ep.col === col);
     
     if (clickedEndpoint) {
@@ -1074,7 +884,6 @@ const CooperativeFlowPuzzle = () => {
     if (activePath === null) return;
     
     const currentPath = paths.get(activePath) || [];
-    
     const isOccupied = Array.from(paths.entries()).some(([pathId, pathCells]) => {
       return pathId !== activePath && pathCells.includes(cellKey);
     });
@@ -1105,8 +914,6 @@ const CooperativeFlowPuzzle = () => {
     const newLevel = currentLevel + 1;
     setCurrentLevel(newLevel);
     setRequiredKey(generateRandomKey());
-    
-    // Reset power timer and state for new level
     setPowerTimer(0);
     setIsKeyPressed(false);
     
@@ -1135,7 +942,7 @@ const CooperativeFlowPuzzle = () => {
       }
     }
     
-    let classes = 'w-12 h-12 border-2 cursor-pointer transition-all duration-200 flex items-center justify-center text-lg font-bold ';
+    let classes = 'w-10 h-10 sm:w-12 sm:h-12 border-2 cursor-pointer transition-all duration-200 flex items-center justify-center text-lg font-bold ';
     
     if (isObstacle) {
       classes += 'bg-gray-800 border-gray-600 cursor-not-allowed';
@@ -1195,6 +1002,39 @@ const CooperativeFlowPuzzle = () => {
     return '';
   };
 
+  if (!deviceSelected) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-purple-50 to-blue-100 p-8">
+        <div className="text-center bg-white rounded-lg shadow-lg p-8 max-w-md">
+          <h1 className="text-3xl font-bold text-gray-800 mb-6">Device Type Selection</h1>
+          <p className="text-gray-600 mb-6">
+            Are you playing on mobile or desktop? This helps us optimize the experience.
+          </p>
+          <div className="space-y-4">
+            <button 
+              onClick={() => {
+                setDeviceType('mobile');
+                setDeviceSelected(true);
+              }}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              📱 Mobile / Tablet
+            </button>
+            <button 
+              onClick={() => {
+                setDeviceType('desktop');
+                setDeviceSelected(true);
+              }}
+              className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              💻 Desktop / Laptop
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!gameStarted) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 p-8">
@@ -1207,31 +1047,52 @@ const CooperativeFlowPuzzle = () => {
           </div>
           <button 
             onClick={startGame}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+            className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
           >
             Start Game
           </button>
+          
+          {/* Anti-Piracy Notice */}
+          <div className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-xs text-red-800 font-semibold mb-1">⚠️ ANTI-PIRACY NOTICE</p>
+            <p className="text-xs text-red-700">
+              This game is protected by copyright. Unauthorized copying, distribution, or modification is strictly prohibited and may result in legal action.
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 p-2 sm:p-4">
       <div className="max-w-4xl mx-auto">
         
+        {/* Loading Screen */}
+        {isLoading && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40">
+            <div className="bg-white rounded-lg p-6 sm:p-8 text-center shadow-xl">
+              <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">Loading Level {currentLevel}</h3>
+              <p className="text-gray-600 text-sm sm:text-base">
+                {gameMode === 'puzzle' ? 'Generating puzzle...' : 'Building platforms...'}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Microtransaction Popup */}
         {showMicrotransaction && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl border-4 border-yellow-400">
-              <h3 className="text-2xl font-bold text-yellow-600 mb-4 text-center">💰 Skip Level</h3>
+            <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md mx-4 shadow-xl border-4 border-yellow-400">
+              <h3 className="text-xl sm:text-2xl font-bold text-yellow-600 mb-4 text-center">💰 Skip Level</h3>
               <div className="text-center mb-6">
-                <div className="text-4xl font-bold text-green-600 mb-2">$0.45</div>
-                <p className="text-gray-700 mb-4">
+                <div className="text-3xl sm:text-4xl font-bold text-green-600 mb-2">$0.45</div>
+                <p className="text-gray-700 mb-4 text-sm sm:text-base">
                   Skip this challenging level and advance immediately!
                 </p>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-yellow-800">
+                  <p className="text-xs sm:text-sm text-yellow-800">
                     ⚡ Instant progression<br/>
                     🎯 No more frustration<br/>
                     🏆 Keep the fun going!
@@ -1243,19 +1104,18 @@ const CooperativeFlowPuzzle = () => {
                   onClick={() => {
                     setShowMicrotransaction(false);
                     setHasPurchasedSkip(true);
-                    // Simulate "purchase" and skip level
                     setTimeout(() => {
                       nextLevel();
                       setHasPurchasedSkip(false);
                     }, 1000);
                   }}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-colors text-lg"
+                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-colors text-base sm:text-lg"
                 >
                   💳 Purchase & Skip - $0.45
                 </button>
                 <button 
                   onClick={() => setShowMicrotransaction(false)}
-                  className="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-6 rounded-lg transition-colors"
+                  className="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-2 px-6 rounded-lg transition-colors text-sm sm:text-base"
                 >
                   Cancel
                 </button>
@@ -1270,73 +1130,30 @@ const CooperativeFlowPuzzle = () => {
         {/* Purchase Success Animation */}
         {hasPurchasedSkip && (
           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-8 text-center shadow-xl">
-              <div className="text-6xl mb-4">✅</div>
-              <h3 className="text-2xl font-bold text-green-600 mb-2">Purchase Successful!</h3>
-              <p className="text-gray-700">Skipping to next level...</p>
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mt-4"></div>
-            </div>
-          </div>
-        )}
-        {unsolvableError && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
-              <h3 className="text-xl font-bold text-red-600 mb-4">⚠️ Testing Alert</h3>
-              <p className="text-gray-700 mb-4">
-                Puzzle cannot be solved! All pairs cannot be connected without overlap.
-              </p>
-              <div className="space-x-4">
-                <button 
-                  onClick={() => {
-                    setUnsolvableError(false);
-                    initializePuzzle(currentLevel);
-                  }}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors"
-                >
-                  Try Again
-                </button>
-                <button 
-                  onClick={() => {
-                    setUnsolvableError(false);
-                    nextLevel();
-                  }}
-                  className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-colors"
-                >
-                  Skip Level
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Loading Screen */}
-        {isLoading && (
-          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40">
-            <div className="bg-white rounded-lg p-8 text-center shadow-xl">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Loading Level {currentLevel}</h3>
-              <p className="text-gray-600">
-                {gameMode === 'puzzle' ? 'Generating puzzle...' : 'Building platforms...'}
-              </p>
+            <div className="bg-white rounded-lg p-6 sm:p-8 text-center shadow-xl">
+              <div className="text-4xl sm:text-6xl mb-4">✅</div>
+              <h3 className="text-xl sm:text-2xl font-bold text-green-600 mb-2">Purchase Successful!</h3>
+              <p className="text-gray-700 text-sm sm:text-base">Skipping to next level...</p>
+              <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-green-500 mx-auto mt-4"></div>
             </div>
           </div>
         )}
 
         {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+        <div className="text-center mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
             {gameMode === 'puzzle' ? 'Cooperative Flow Puzzle' : 'Cooperative Platformer'}
           </h1>
-          <div className="flex justify-center items-center gap-8 text-sm">
-            <div className="bg-white rounded-lg px-4 py-2 shadow-md">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 text-sm">
+            <div className="bg-white rounded-lg px-3 sm:px-4 py-2 shadow-md">
               <span className="font-semibold">Level:</span> {currentLevel}
             </div>
-            <div className="bg-white rounded-lg px-4 py-2 shadow-md">
+            <div className="bg-white rounded-lg px-3 sm:px-4 py-2 shadow-md">
               <span className="font-semibold">Power Time:</span> {(powerTimer / 10).toFixed(1)}s
             </div>
             <button 
               onClick={() => setShowMicrotransaction(true)}
-              className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm shadow-md border-2 border-yellow-400"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-3 sm:px-4 rounded-lg transition-colors text-xs sm:text-sm shadow-md border-2 border-yellow-400"
             >
               💰 Skip Level - $0.45
             </button>
@@ -1344,21 +1161,25 @@ const CooperativeFlowPuzzle = () => {
         </div>
         
         {/* Power Status */}
-        <div className="text-center mb-6">
-          <div className={`inline-block px-6 py-3 rounded-lg font-bold text-lg transition-all duration-200 ${
+        <div className="text-center mb-4 sm:mb-6">
+          <div className={`inline-block px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-bold text-base sm:text-lg transition-all duration-200 ${
             isKeyPressed 
               ? 'bg-green-400 text-green-800 shadow-lg shadow-green-200' 
               : 'bg-red-100 text-red-800'
           }`}>
-            Player 1: {isKeyPressed ? `✅ Powering (${requiredKey} held)` : `❌ Hold "${requiredKey}" key`}
+            {deviceType === 'mobile' ? (
+              isKeyPressed ? '✅ Screen Held - Power On!' : '❌ Hold Screen to Power Grid'
+            ) : (
+              isKeyPressed ? `✅ Powering (${requiredKey} held)` : `❌ Hold "${requiredKey}" key`
+            )}
           </div>
         </div>
         
         {gameMode === 'puzzle' ? (
           <>
             {/* Game Grid */}
-            <div className="flex justify-center mb-6">
-              <div className="grid grid-cols-6 gap-1 bg-gray-300 p-4 rounded-lg shadow-lg">
+            <div className="flex justify-center mb-4 sm:mb-6">
+              <div className="grid grid-cols-6 gap-1 bg-gray-300 p-2 sm:p-4 rounded-lg shadow-lg">
                 {grid.map((row, rowIndex) =>
                   row.map((cell, colIndex) => (
                     <button
@@ -1375,19 +1196,31 @@ const CooperativeFlowPuzzle = () => {
             </div>
             
             {/* Instructions */}
-            <div className="text-center text-gray-600 mb-4">
+            <div className="text-center text-gray-600 mb-4 px-4">
               {currentLevel === 1 ? (
                 <>
-                  <p>Player 2: Click adjacent cells to build a path from ⚡ to 🎯</p>
-                  <p className="text-sm">Path only works when Player 1 provides power!</p>
+                  <p className="text-sm sm:text-base">
+                    {deviceType === 'mobile' 
+                      ? 'Player 1: Hold your finger on the screen to power the grid'
+                      : 'Player 1: Hold the assigned key to power the grid'
+                    }
+                  </p>
+                  <p className="text-sm sm:text-base">Player 2: Click adjacent cells to build a path from ⚡ to 🎯</p>
+                  <p className="text-xs sm:text-sm">Path only works when Player 1 provides power!</p>
                 </>
               ) : (
                 <>
-                  <p>Player 2: Connect matching emoji pairs with unique paths</p>
-                  <p className="text-sm">Click a source emoji to start, then build a path to its matching target</p>
-                  <p className="text-sm">Paths cannot overlap! Power required to build.</p>
+                  <p className="text-sm sm:text-base">
+                    {deviceType === 'mobile' 
+                      ? 'Player 1: Hold your finger on the screen to power the grid'
+                      : 'Player 1: Hold the assigned key to power the grid'
+                    }
+                  </p>
+                  <p className="text-sm sm:text-base">Player 2: Connect matching emoji pairs with unique paths</p>
+                  <p className="text-xs sm:text-sm">Click a source emoji to start, then build a path to its matching target</p>
+                  <p className="text-xs sm:text-sm">Paths cannot overlap! Power required to build.</p>
                   {activePath !== null && (
-                    <p className="text-blue-600 font-semibold">
+                    <p className="text-blue-600 font-semibold text-sm">
                       Building path for: {endpoints.find(ep => ep.id === activePath && ep.type === 'source')?.emoji}
                     </p>
                   )}
@@ -1398,8 +1231,8 @@ const CooperativeFlowPuzzle = () => {
         ) : (
           <>
             {/* Advanced Platformer Game */}
-            <div className="flex justify-center mb-6">
-              <div className="relative border-4 border-gray-800 rounded-lg overflow-hidden bg-gradient-to-b from-sky-200 to-green-200">
+            <div className="flex justify-center mb-4 sm:mb-6">
+              <div className="relative border-2 sm:border-4 border-gray-800 rounded-lg overflow-hidden bg-gradient-to-b from-sky-200 to-green-200">
                 <canvas 
                   ref={canvasRef}
                   width="800" 
@@ -1408,69 +1241,81 @@ const CooperativeFlowPuzzle = () => {
                 />
                 
                 {/* UI Overlay */}
-                <div className="absolute top-2 left-2 text-white font-bold text-shadow z-10">
+                <div className="absolute top-1 sm:top-2 left-1 sm:left-2 text-white font-bold text-shadow z-10 text-xs sm:text-sm">
                   <div>Score: <span>{platformerGame.score}</span></div>
                   <div>Lives: <span>{platformerGame.lives}</span></div>
                   <div>Level: <span>{platformerGame.level}</span></div>
                   {platformerGame.timeLimitActive && (
-                    <div className={`text-lg font-bold ${platformerGame.countdownStarted ? 'text-red-500' : 'text-red-400'}`}>
+                    <div className={`text-sm sm:text-lg font-bold ${platformerGame.countdownStarted ? 'text-red-500' : 'text-red-400'}`}>
                       Time: <span>{Math.ceil(platformerGame.timeLimit / 60)}</span>
                     </div>
                   )}
                 </div>
                 
                 {/* Instructions Overlay */}
-                <div className="absolute bottom-2 right-2 text-white text-xs text-shadow z-10">
+                <div className="absolute bottom-1 sm:bottom-2 right-1 sm:right-2 text-white text-xs sm:text-xs text-shadow z-10">
                   <div>WASD or Arrow Keys + Space to move and jump</div>
                   <div>Collect coins and avoid enemies!</div>
                   <div>Reach 500 points to activate time limit!</div>
                 </div>
               </div>
-            </div>
-            
+            </div>            
             {/* Platformer Instructions */}
-            <div className="text-center text-gray-600 mb-4">
-              <p>Player 1: Hold "{requiredKey}" to give power</p>
-              <p>Player 2: Use WASD or Arrow Keys to move, Space to jump</p>
-              <p className="text-sm text-red-600">If you fall off or lose all lives, you'll restart at puzzle level 1!</p>
+            <div className="text-center text-gray-600 mb-4 px-4">
+              <p className="text-sm sm:text-base">
+                {deviceType === 'mobile' 
+                  ? 'Player 1: Hold your finger on the screen to give power'
+                  : `Player 1: Hold "${requiredKey}" to give power`
+                }
+              </p>
+              <p className="text-sm sm:text-base">Player 2: Use WASD or Arrow Keys to move, Space to jump</p>
+              <p className="text-xs sm:text-sm text-red-600">If you fall off or lose all lives, you'll restart at puzzle level 1!</p>
             </div>
           </>
         )}
         
         {/* Win State */}
         {gameWon && (
-          <div className="text-center">
+          <div className="text-center px-4">
             <div className="bg-green-100 border border-green-400 rounded-lg p-4 mb-4 inline-block">
-              <h2 className="text-2xl font-bold text-green-800 mb-2">
+              <h2 className="text-xl sm:text-2xl font-bold text-green-800 mb-2">
                 {gameMode === 'puzzle' ? '🎉 Level Complete!' : '🎉 Platformer Level Complete!'}
               </h2>
               {gameMode === 'puzzle' && currentLevel === 6 ? (
-                <p className="text-green-700">
+                <p className="text-green-700 text-sm sm:text-base">
                   That was easy! But now the real challenge begins... 🎮
                 </p>
               ) : gameMode === 'puzzle' ? (
-                <p className="text-green-700">
+                <p className="text-green-700 text-sm sm:text-base">
                   Great teamwork! You completed level {currentLevel} in {(powerTimer / 10).toFixed(1)} seconds.
                 </p>
               ) : (
-                <p className="text-green-700">
+                <p className="text-green-700 text-sm sm:text-base">
                   Excellent coordination! You navigated the platformer challenge successfully.
                 </p>
               )}
             </div>
-            <div className="space-x-4">
+            <div className="space-y-3 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
               <button 
                 onClick={nextLevel}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+                className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition-colors text-sm sm:text-base"
               >
                 {gameMode === 'puzzle' && currentLevel === 6 ? 'Enter Platformer Mode!' : 'Next Level'}
               </button>
               <button 
                 onClick={() => setGameStarted(false)}
-                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+                className="w-full sm:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition-colors text-sm sm:text-base"
               >
                 New Game
               </button>
+            </div>
+            
+            {/* Anti-Piracy Notice */}
+            <div className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg max-w-md mx-auto">
+              <p className="text-xs text-red-800 font-semibold mb-1">⚠️ ANTI-PIRACY NOTICE</p>
+              <p className="text-xs text-red-700">
+                This game is protected by copyright. Unauthorized copying, distribution, or modification is strictly prohibited and may result in legal action.
+              </p>
             </div>
           </div>
         )}
