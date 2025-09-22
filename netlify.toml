@@ -1,0 +1,13 @@
+[build]
+  # This is a static site - no build process needed
+  publish = "."
+
+[build.environment]
+  # Environment variables if needed
+  NODE_VERSION = "18"
+
+[[redirects]]
+  # Handle client-side routing (if needed)
+  from = "/*"
+  to = "/index.html"
+  status = 200
